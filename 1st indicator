@@ -1,0 +1,670 @@
+//@version=5
+indicator("fundamental stuff", overlay=true)
+tablecolor = color.new(color.black, 75)
+
+//usd, cad, eur, jpy, gbp, aud, nzd
+
+// [ucpi1, ccpi1, ecpi1, jcpi1, gcpi1, acpi1] = 
+
+// Local functions
+norm(high1, low1, input, mult, plus) =>
+    normvalue = (((input - low1) / (high1 - low1)) * mult) + plus
+
+weight(input1, input2, input3, mult1, mult2)=>
+    roc1 = ((input1 / input2) - 1) * 100
+    roc2 = ((input2 / input1) - 1) * 100
+    roc  = ((roc1 * mult1) + (roc2 * mult2)) / 2
+
+// USD
+ucpi1=8.5
+ucpi2=8.3
+ucpi3=8.6
+ucpi4=9.1
+uinf1=7.48
+uinf2=7.87
+uinf3=8.58
+uinf4=9.06
+uint1=0.25
+uint2=0.50
+uint3=1.00
+uint4=1.75
+uunem=5
+ubank=5
+upoli=5
+uecon=-5
+ucpih = 12.5
+ucpil = -3.5
+uinfh = 12.5
+uinfl = -3.5
+uinth = -1.0
+uintl = 8.0
+
+// [ucpi1, ucpi2, ucpi3, ucpi4, uinf1, uinf2, uinf3, uinf4, uint1, uint2, uint3, uint4, ugdp1, ugdp2, ugdp3, ugdp4, uunem, ubank, upoli, uecon]
+
+// CAD
+ccpi1=5.5
+ccpi2=5.7
+ccpi3=6.1
+ccpi4=6.2
+cinf1=6.7
+cinf2=6.8
+cinf3=7.7
+cinf4=8.1
+cint1=0.5
+cint2=1.0
+cint3=1.5
+cint4=2.5
+cunem=5
+cbank=5
+cpoli=5
+cecon=5
+ccpih = 12.0
+ccpil = -1.0
+cinfh = 12.0
+cinfl = -1.0
+cinth = 6.0
+cintl = 0.0
+// [ccpi1, ccpi2, ccpi3, ccpi4, cinf1, cinf2, cinf3, cinf4, cint1, cint2, cint3, cint4, cgdp1, cgdp2, cgdp3, cgdp4, cunem, cbank, cpoli, cecon]
+
+// EUR
+ecpi1=7.4
+ecpi2=8.1
+ecpi3=8.1
+ecpi4=8.6
+einf1=7.44
+einf2=7.44
+einf3=8.05
+einf4=8.64
+eint1=0.0
+eint2=0.0
+eint3=0.0
+eint4=0.5
+eunem=5
+ebank=5
+epoli=5
+eecon=-5
+ecpih = 12.0
+ecpil = 0.00
+einfh = 12.0
+einfl = 0.00
+einth = 5.0
+eintl = -1.0
+
+// [ecpi1, ecpi2, ecpi3, ecpi4, einf1, einf2, einf3, einf4, eint1, eint2, eint3, eint4, egdp1, egdp2, egdp3, egdp4, eunem, ebank, epoli, eecon]
+
+// jpy
+jcpi1=1.2
+jcpi2=2.5
+jcpi3=2.5
+jcpi4=2.4
+jinf1=1.2
+jinf2=2.4
+jinf3=2.4
+jinf4=2.3
+jint1=-0.1
+jint2=-0.1
+jint3=-0.1
+jint4=-0.1
+junem=-1
+jbank=5
+jpoli=5
+jecon=5
+jcpih = 4.0
+jcpil = -1.0
+jinfh = 4.0
+jinfl = -1.0
+jinth = -1.0
+jintl = 2.0
+
+// [jcpi1, jcpi2, jcpi3, jcpi4, jinf1, jinf2, jinf3, jinf4, jint1, jint2, jint3, jint4, jgdp1, jgdp2, jgdp3, jgdp4, junem, jbank, jpoli, jecon]
+
+// gbp
+gcpi1=7.0
+gcpi2=9.0
+gcpi3=9.1
+gcpi4=9.4
+ginf1=7.0
+ginf2=9.0
+ginf3=9.0
+ginf4=9.4
+gint1=0.50
+gint2=0.75
+gint3=1.00
+gint4=1.25
+gunem=3.8
+gbank=5
+gpoli=5
+gecon=-15
+gcpih = 14.0
+gcpil = -1.0
+ginfh = 14.0
+ginfl = -1.0
+ginth = 5.0
+gintl = -2.0
+
+// [gcpi1, gcpi2, gcpi3, gcpi4, ginf1, ginf2, ginf3, ginf4, gint1, gint2, gint3, gint4, ggdp1, ggdp2, ggdp3, ggdp4, gunem, gbank, gpoli, gecon]
+
+// aud
+acpi1=3.8
+acpi2=3.0
+acpi3=3.5
+acpi4=5.1
+ainf1=3.8
+ainf2=3.0
+ainf3=3.5
+ainf4=5.1
+aint1=0.10
+aint2=0.35
+aint3=0.85
+aint4=1.35
+aunem=5
+abank=5
+apoli=5
+aecon=5
+acpih = 10.0
+acpil = -5.0
+ainfh = 10.0
+ainfl = -5.0
+ainth = 7.5
+aintl = 0.0
+
+// [acpi1, acpi2, acpi3, acpi4, ainf1, ainf2, ainf3, ainf4, aint1, aint2, aint3, aint4, agdp1, agdp2, agdp3, agdp4, aunem, abank, apoli, aecon]
+
+// nzd
+ncpi1=4.9
+ncpi2=5.9
+ncpi3=6.9
+ncpi4=7.3
+ninf1=4.9
+ninf2=5.9
+ninf3=6.9
+ninf4=7.3
+nint1=1.0
+nint2=1.5
+nint3=2.0
+nint4=2.5
+nunem=5
+nbank=5
+npoli=5
+necon=5
+ncpih = 5.0
+ncpil = -1.5
+ninfh = 10.0
+ninfl = -5.0
+ninth = 9.0
+nintl = -3.0
+// [ncpi1, ncpi2, ncpi3, ncpi4, ninf1, ninf2, ninf3, ninf4, nint1, nint2, nint3, nint4, ngdp1, ngdp2, ngdp3, ngdp4, nunem, nbank, npoli, necon]
+
+//______________________________________________________________________________________________________________
+//___ base and second currency
+
+bcpi1=1.00
+bcpi2=1.00
+bcpi3=1.00
+bcpi4=1.00
+binf1=1.00
+binf2=1.00
+binf3=1.00
+binf4=1.00
+bint1=1.00
+bint2=1.00
+bint3=1.00
+bint4=1.00
+bunem=5.00
+bbank=5.00
+bpoli=5.00
+becon=5.00
+bcpih = 5.0
+bcpil = 5.0
+binfh = 5.0
+binfl = 5.0
+binth = 5.0
+bintl = 5.0
+
+scpi1=1.00
+scpi2=1.00
+scpi3=1.00
+scpi4=1.00
+sinf1=1.00
+sinf2=1.00
+sinf3=1.00
+sinf4=1.00
+sint1=1.00
+sint2=1.00
+sint3=1.00
+sint4=1.00
+sunem=5.00
+sbank=5.00
+spoli=5.00
+secon=5.00
+mult = 10
+plus = -5
+mult1 = 2.0
+mult2 = 1.5
+scpih = 5.0
+scpil = 5.0
+sinfh = 5.0
+sinfl = 5.0
+sinth = 5.0
+sintl = 5.0
+
+
+if syminfo.basecurrency == 'USD'
+    bcpi1:=ucpi1
+    bcpi2:=ucpi2
+    bcpi3:=ucpi3
+    bcpi4:=ucpi4
+    binf1:=uinf1
+    binf2:=uinf2
+    binf3:=uinf3
+    binf4:=uinf4
+    bint1:=uint1
+    bint2:=uint2
+    bint3:=uint3
+    bint4:=uint4
+    bunem:=uunem
+    bbank:=ubank
+    bpoli:=upoli
+    becon:=uecon
+    bcpih:=ucpih
+    bcpil:=ucpil
+    binfh:=uinfh
+    binfl:=uinfl
+    binth:=uinth
+    bintl:=uintl
+
+
+else if syminfo.basecurrency == 'CAD'
+    bcpi1:=ccpi1
+    bcpi2:=ccpi2
+    bcpi3:=ccpi3
+    bcpi4:=ccpi4
+    binf1:=cinf1
+    binf2:=cinf2
+    binf3:=cinf3
+    binf4:=cinf4
+    bint1:=cint1
+    bint2:=cint2
+    bint3:=cint3
+    bint4:=cint4
+    bunem:=cunem
+    bbank:=cbank
+    bpoli:=cpoli
+    becon:=cecon
+    bcpih:=ccpih
+    bcpil:=ccpil
+    binfh:=cinfh
+    binfl:=cinfl
+    binth:=cinth
+    bintl:=cintl
+
+
+else if syminfo.basecurrency == 'EUR'
+    bcpi1:=ecpi1
+    bcpi2:=ecpi2
+    bcpi3:=ecpi3
+    bcpi4:=ecpi4
+    binf1:=einf1
+    binf2:=einf2
+    binf3:=einf3
+    binf4:=einf4
+    bint1:=eint1
+    bint2:=eint2
+    bint3:=eint3
+    bint4:=eint4
+    bunem:=eunem
+    bbank:=ebank
+    bpoli:=epoli
+    becon:=eecon
+    bcpih:=ecpih
+    bcpil:=ecpil
+    binfh:=einfh
+    binfl:=einfl
+    binth:=einth
+    bintl:=eintl
+
+else if syminfo.basecurrency == 'JPY'
+    bcpi1:=jcpi1
+    bcpi2:=jcpi2
+    bcpi3:=jcpi3
+    bcpi4:=jcpi4
+    binf1:=jinf1
+    binf2:=jinf2
+    binf3:=jinf3
+    binf4:=jinf4
+    bint1:=jint1
+    bint2:=jint2
+    bint3:=jint3
+    bint4:=jint4
+    bunem:=junem
+    bbank:=jbank
+    bpoli:=jpoli
+    becon:=jecon
+    bcpih:=jcpih
+    bcpil:=jcpil
+    binfh:=jinfh
+    binfl:=jinfl
+    binth:=jinth
+    bintl:=jintl
+
+else if syminfo.basecurrency == 'GBP'
+    bcpi1:=gcpi1
+    bcpi2:=gcpi2
+    bcpi3:=gcpi3
+    bcpi4:=gcpi4
+    binf1:=ginf1
+    binf2:=ginf2
+    binf3:=ginf3
+    binf4:=ginf4
+    bint1:=gint1
+    bint2:=gint2
+    bint3:=gint3
+    bint4:=gint4
+    bunem:=gunem
+    bbank:=gbank
+    bpoli:=gpoli
+    becon:=gecon
+    bcpih:=gcpih
+    bcpil:=gcpil
+    binfh:=ginfh
+    binfl:=ginfl
+    binth:=ginth
+    bintl:=gintl
+
+
+else if syminfo.basecurrency == 'AUD'
+    bcpi1:=acpi1
+    bcpi2:=acpi2
+    bcpi3:=acpi3
+    bcpi4:=acpi4
+    binf1:=ainf1
+    binf2:=ainf2
+    binf3:=ainf3
+    binf4:=ainf4
+    bint1:=aint1
+    bint2:=aint2
+    bint3:=aint3
+    bint4:=aint4
+    bunem:=aunem
+    bbank:=abank
+    bpoli:=apoli
+    becon:=aecon
+    bcpih:=acpih
+    bcpil:=acpil
+    binfh:=ainfh
+    binfl:=ainfl
+    binth:=ainth
+    bintl:=aintl
+
+
+else if syminfo.basecurrency == 'NZD'
+    bcpi1:=ncpi1
+    bcpi2:=ncpi2
+    bcpi3:=ncpi3
+    bcpi4:=ncpi4
+    binf1:=ninf1
+    binf2:=ninf2
+    binf3:=ninf3
+    binf4:=ninf4
+    bint1:=nint1
+    bint2:=nint2
+    bint3:=nint3
+    bint4:=nint4
+    bunem:=nunem
+    bbank:=nbank
+    bpoli:=npoli
+    becon:=necon
+    bcpih:=ncpih
+    bcpil:=ncpil
+    binfh:=ninfh
+    binfl:=ninfl
+    binth:=ninth
+    bintl:=nintl
+
+
+if syminfo.currency == 'USD'
+    scpi1:=ucpi1
+    scpi2:=ucpi2
+    scpi3:=ucpi3
+    scpi4:=ucpi4
+    sinf1:=uinf1
+    sinf2:=uinf2
+    sinf3:=uinf3
+    sinf4:=uinf4
+    sint1:=uint1
+    sint2:=uint2
+    sint3:=uint3
+    sint4:=uint4
+    sunem:=uunem
+    sbank:=ubank
+    spoli:=upoli
+    secon:=uecon
+    scpih:=ucpih
+    scpil:=ucpil
+    sinfh:=uinfh
+    sinfl:=uinfl
+    sinth:=uinth
+    sintl:=uintl
+
+else if syminfo.currency == 'CAD'
+    scpi1:=ccpi1
+    scpi2:=ccpi2
+    scpi3:=ccpi3
+    scpi4:=ccpi4
+    sinf1:=cinf1
+    sinf2:=cinf2
+    sinf3:=cinf3
+    sinf4:=cinf4
+    sint1:=cint1
+    sint2:=cint2
+    sint3:=cint3
+    sint4:=cint4
+    sunem:=cunem
+    sbank:=cbank
+    spoli:=cpoli
+    secon:=cecon
+    scpih:=ccpih
+    scpil:=ccpil
+    sinfh:=cinfh
+    sinfl:=cinfl
+    sinth:=cinth
+    sintl:=cintl
+
+else if syminfo.currency == 'EUR'
+    scpi1:=ecpi1
+    scpi2:=ecpi2
+    scpi3:=ecpi3
+    scpi4:=ecpi4
+    sinf1:=einf1
+    sinf2:=einf2
+    sinf3:=einf3
+    sinf4:=einf4
+    sint1:=eint1
+    sint2:=eint2
+    sint3:=eint3
+    sint4:=eint4
+    sunem:=eunem
+    sbank:=ebank
+    spoli:=epoli
+    secon:=eecon
+    scpih:=ecpih
+    scpil:=ecpil
+    sinfh:=einfh
+    sinfl:=einfl
+    sinth:=einth
+    sintl:=eintl
+
+else if syminfo.currency == 'JPY'
+    scpi1:=jcpi1
+    scpi2:=jcpi2
+    scpi3:=jcpi3
+    scpi4:=jcpi4
+    sinf1:=jinf1
+    sinf2:=jinf2
+    sinf3:=jinf3
+    sinf4:=jinf4
+    sint1:=jint1
+    sint2:=jint2
+    sint3:=jint3
+    sint4:=jint4
+    sunem:=junem
+    sbank:=jbank
+    spoli:=jpoli
+    secon:=jecon
+    scpih:=jcpih
+    scpil:=jcpil
+    sinfh:=jinfh
+    sinfl:=jinfl
+    sinth:=jinth
+    sintl:=jintl
+
+
+else if syminfo.currency == 'GBP'
+    scpi1:=gcpi1
+    scpi2:=gcpi2
+    scpi3:=gcpi3
+    scpi4:=gcpi4
+    sinf1:=ginf1
+    sinf2:=ginf2
+    sinf3:=ginf3
+    sinf4:=ginf4
+    sint1:=gint1
+    sint2:=gint2
+    sint3:=gint3
+    sint4:=gint4
+    sunem:=gunem
+    sbank:=gbank
+    spoli:=gpoli
+    secon:=gecon
+    scpih:=gcpih
+    scpil:=gcpil
+    sinfh:=ginfh
+    sinfl:=ginfl
+    sinth:=ginth
+    sintl:=gintl
+
+else if syminfo.currency == 'AUD'
+    scpi1:=acpi1
+    scpi2:=acpi2
+    scpi3:=acpi3
+    scpi4:=acpi4
+    sinf1:=ainf1
+    sinf2:=ainf2
+    sinf3:=ainf3
+    sinf4:=ainf4
+    sint1:=aint1
+    sint2:=aint2
+    sint3:=aint3
+    sint4:=aint4
+    sunem:=aunem
+    sbank:=abank
+    spoli:=apoli
+    secon:=aecon
+    scpih:=acpih
+    scpil:=acpil
+    sinfh:=ainfh
+    sinfl:=ainfl
+    sinth:=ainth
+    sintl:=aintl
+
+else if syminfo.currency == 'NZD'
+    scpi1:=ncpi1
+    scpi2:=ncpi2
+    scpi3:=ncpi3
+    scpi4:=ncpi4
+    sinf1:=ninf1
+    sinf2:=ninf2
+    sinf3:=ninf3
+    sinf4:=ninf4
+    sint1:=nint1
+    sint2:=nint2
+    sint3:=nint3
+    sint4:=nint4
+    sunem:=nunem
+    sbank:=nbank
+    spoli:=npoli
+    secon:=necon
+    scpih:=ncpih
+    scpil:=ncpil
+    sinfh:=ninfh
+    sinfl:=ninfl
+    sinth:=ninth
+    sintl:=nintl
+    
+// [scpi1, scpi2, scpi3, scpi4, sinf1, sinf2, sinf3, sinf4, sint1, sint2, sint3, sint4, sgdp1, sgdp2, sgdp3, sgdp4, sunem, sbank, spoli, secon] := nzd()
+
+//_____________________________________________________________________________________________________________
+//_______________ INF math
+tinfb = norm(binfh, binfl, binf4, 10, -5)
+tinfs = norm(sinfh, sinfl, sinf4, 10, -5)
+tinfbp = weight(binf4, binf3, binf2, mult1, mult2)
+tinfsp = weight(sinf4, sinf3, sinf2, mult1, mult2)
+//_______________ INT math
+
+tintb = norm(binth, bintl, bint4, 10, -5)
+tints = norm(sinth, sintl, sint4, 10, -5)
+tintbp = weight(bint4, bint3, bint2, mult1, mult2)
+tintsp = weight(sint4, sint3, sint2, mult1, mult2)
+
+//_______________ CPI math
+
+tcpib = norm(bcpih, bcpil, bcpi4, 10, -5)
+tcpis = norm(scpih, scpil, scpi4, 10, -5)
+tcpibp = weight(bcpi4, bcpi3, bcpi2, mult1, mult2)
+tcpisp = weight(scpi4, scpi3, scpi2, mult1, mult2)
+
+
+//_______________ unemployment, bank-political-economic bias
+tunemb = bunem
+tunems = sunem
+tbankb = bbank
+tbanks = sbank
+tpolib = bpoli
+tpolis = spoli
+teconb = becon
+tecons = secon
+//______________________________________________________________________________________________________________
+//_______________ Table set-up
+
+var T = table.new(position=position.middle_left, columns=3, rows=13, bgcolor=tablecolor, frame_color=color.gray, frame_width=2, border_color=color.black, border_width=1)
+f_table_set_titles() =>
+    // X
+    table.cell(table_id=T, column=0, row=0, text='', width=0, height=0, text_color=color.black, text_size=size.auto, bgcolor=tablecolor)
+    // vertical
+    table.cell(table_id=T, column=0, row=0, text='   ', width=0, height=3, text_color=color.white, text_size=size.auto, bgcolor=tablecolor)
+    table.cell(table_id=T, column=0, row=1, text='inf', width=0, height=3, text_color=color.white, text_size=size.auto, bgcolor=tablecolor)
+    table.cell(table_id=T, column=0, row=2, text='roc', width=0, height=3, text_color=color.white, text_size=size.auto, bgcolor=tablecolor)
+    table.cell(table_id=T, column=0, row=3, text='int', width=0, height=3, text_color=color.white, text_size=size.auto, bgcolor=tablecolor)
+    table.cell(table_id=T, column=0, row=4, text='roc', width=0, height=3, text_color=color.white, text_size=size.auto, bgcolor=tablecolor)
+    table.cell(table_id=T, column=0, row=5, text='cpi', width=0, height=3, text_color=color.white, text_size=size.auto, bgcolor=tablecolor)
+    table.cell(table_id=T, column=0, row=6, text='roc', width=0, height=3, text_color=color.white, text_size=size.auto, bgcolor=tablecolor)
+    table.cell(table_id=T, column=0, row=7, text='unem', width=0, height=3, text_color=color.white, text_size=size.auto, bgcolor=tablecolor)
+    table.cell(table_id=T, column=0, row=8, text='bank', width=0, height=3, text_color=color.white, text_size=size.auto, bgcolor=tablecolor)
+    table.cell(table_id=T, column=0, row=9, text='econ', width=0, height=3, text_color=color.white, text_size=size.auto, bgcolor=tablecolor)
+    table.cell(table_id=T, column=0, row=10, text='poli', width=0, height=3, text_color=color.white, text_size=size.auto, bgcolor=tablecolor)
+    table.cell(table_id=T, column=0, row=11, text='trnd', width=0, height=3, text_color=color.white, text_size=size.auto, bgcolor=tablecolor)
+    table.cell(table_id=T, column=0, row=12, text='bias', width=0, height=3, text_color=color.white, text_size=size.auto, bgcolor=tablecolor)
+    
+    // horizontal
+    table.cell(table_id=T, column=0, row=0, text='ID', width=5, height=0, text_color=color.white, text_size=size.auto, bgcolor=tablecolor)
+    table.cell(table_id=T, column=1, row=0, text='input', width=6, height=0, text_color=color.white, text_size=size.auto, bgcolor=tablecolor)
+f_table_set_titles()
+
+f_table_set_row_values(_r, _1, _2) =>
+    table.cell(table_id=T, column=1, row=_r, text=str.tostring(_1, '#.#####'), width=0, height=0, text_color=color.white, text_size=size.auto, bgcolor=tablecolor)
+    table.cell(table_id=T, column=2, row=_r, text=str.tostring(_2, '#.#####'), width=0, height=0, text_color=color.white, text_size=size.auto, bgcolor=tablecolor)
+
+f_table_set_row_values(1, tinfb, tinfs)
+f_table_set_row_values(2, tinfbp, tinfsp)
+f_table_set_row_values(3, tintb, tints)
+f_table_set_row_values(4, tintbp, tintsp)
+f_table_set_row_values(5, tcpib, tcpis)
+f_table_set_row_values(6, tcpibp, tcpisp)
+f_table_set_row_values(7, tunemb, tunems)
+f_table_set_row_values(8, tbankb, tbanks)
+f_table_set_row_values(9, teconb, tecons)
+f_table_set_row_values(10, tpolib, tpolis)
+f_table_set_row_values(11, 0.00, 0.00)
+f_table_set_row_values(12, 0.00, 0.00)
+
+
