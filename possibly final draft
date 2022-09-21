@@ -1,0 +1,73 @@
+//@version=5
+indicator("fundamentals",overlay=true)
+
+change = ta.change(close, 200)
+sma1 = ta.sma(close, 250)
+plot(sma1)
+
+norm(source, higg, loww, mult, plus)=>
+    high1 = higg
+    low1  = loww
+    normval = (((source - low1) / (high1 - low1)) * mult) + plus
+
+uinf  = request.economic("US", "IRYY", barmerge.gaps_off, ignore_invalid_symbol=true)
+uint = request.economic("US",  "INTR", barmerge.gaps_off, ignore_invalid_symbol=true)
+ugdp = request.economic("US",  "GDPYY", barmerge.gaps_off, ignore_invalid_symbol=true)
+unem = request.economic("US",  "UR", barmerge.gaps_off, ignore_invalid_symbol=true) * -1
+ures = request.economic("US",  "RSYY", barmerge.gaps_off, ignore_invalid_symbol=true)
+urpi = request.economic("US",  "RPI", barmerge.gaps_off, ignore_invalid_symbol=true)
+ublr = request.economic("US",  "BLR", barmerge.gaps_off, ignore_invalid_symbol=true)
+ubr = request.economic("US",  "BR", barmerge.gaps_off, ignore_invalid_symbol=true)
+ucci = request.economic("US",  "CCI", barmerge.gaps_off, ignore_invalid_symbol=true)
+uccs = request.economic("US",  "CCS", barmerge.gaps_off, ignore_invalid_symbol=true)
+uec = request.economic("US",  "EC", barmerge.gaps_off, ignore_invalid_symbol=true)
+uexp = request.economic("US",  "EXP", barmerge.gaps_off, ignore_invalid_symbol=true)
+ugdg = request.economic("US",  "GDG", barmerge.gaps_off, ignore_invalid_symbol=true)
+uehs = request.economic("US",  "EHS", barmerge.gaps_off, ignore_invalid_symbol=true)
+uhpi = request.economic("US",  "HPIYY", barmerge.gaps_off, ignore_invalid_symbol=true)
+uvix = request.security("VIX", 'D', close) * -1
+
+
+ninf = norm( uinf, 11, -1, 10, 0)
+nint = norm( uint, 6, -1, 10, 0)
+ngdp = norm( ugdp, 7, -7, 10, 0)
+nnem = norm( unem, 15, 1, 10, 11)
+nres = norm( ures, 21, -10, 10, 0)
+nvix = norm( uvix, 80, 9, 10, 12)
+nehs = norm( uehs, 7650000, 2970000, 10, 0)
+nblr = norm( ublr, 10, 2, 10, 0)
+nubr = norm( ubr, 60000, 10000, 10, 0)
+ncci = norm( ucci, 120, 40, 10, 0)
+nuec = norm( uec, 1000000, -1000000, 10, 0)
+nexp = norm( uexp, 260000000000, 150000000000, 10, 0)
+ngdg = norm( ugdg, 160, 95, 10, 0)
+nhpi = norm( uhpi, 20, -7, 10, 0)
+
+lea1 = (nblr + ncci + nint) / 3
+mim1 = (ninf + nvix + ngdp + nnem + nres + nuec) / 6
+// lag1 = (nnem + nres) / 2
+
+//plot(lea1, "lea1", color=color.yellow)
+//plot(mim1, "mim1", color=color.red)
+//plot(nehs, "ehs", color=color.blue)
+//plot(nhpi, "hpi", color=color.green)
+
+rsi = ta.rsi(close,14)
+change1 = ta.change(close, 50)
+sma3 = ta.sma(change1, 100)
+midline = (high + low) / 2
+sma4 = ta.sma(midline, 5)
+plot(sma4, title="sma4", color=color.blue, linewidth=4)
+
+tlea = norm(lea1 , 10, 0, sma3, sma4)
+tmim = norm(mim1 , 10, 0, sma3, sma4)
+tehs = norm(nehs , 10, 0, sma3, sma4)
+thpi = norm(nhpi , 10, 0, sma3, sma4)
+nrsi = norm(rsi, 100, 0, sma3, sma4)
+
+plot(tlea, "lea1", color=color.yellow)
+plot(tmim, "mim1", color=color.red)
+plot(tehs, "ehs", color=color.blue)
+plot(thpi, "hpi", color=color.green)
+plot(nrsi, "rsi", color=color.purple, linewidth=1)
+
